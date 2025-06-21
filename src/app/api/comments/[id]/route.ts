@@ -18,7 +18,7 @@ async function getUserFromRequest(request: Request) {
 }
 
 export async function GET(request: Request, context: { params: { id: string } }) {
-  const { id } = await context.params;
+  const { id } = context.params;
   const comment = await prisma.comment.findUnique({
     where: { id },
     include: {
@@ -33,7 +33,7 @@ export async function GET(request: Request, context: { params: { id: string } })
 }
 
 export async function PATCH(request: Request, context: { params: { id: string } }) {
-  const { id } = await context.params;
+  const { id } = context.params;
   const user = await getUserFromRequest(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const comment = await prisma.comment.findUnique({ where: { id } });
@@ -45,7 +45,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
 }
 
 export async function DELETE(request: Request, context: { params: { id: string } }) {
-  const { id } = await context.params;
+  const { id } = context.params;
   const user = await getUserFromRequest(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const comment = await prisma.comment.findUnique({ where: { id } });
@@ -105,7 +105,7 @@ export async function DELETE(request: Request, context: { params: { id: string }
 
 // POST for upvote/downvote/reply
 export async function POST(request: Request, context: { params: { id: string } }) {
-  const { id } = await context.params;
+  const { id } = context.params;
   const user = await getUserFromRequest(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { action, content } = await request.json();

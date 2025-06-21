@@ -19,6 +19,7 @@ model User {
   id           String    @id @default(cuid())
   email        String    @unique
   username     String    @unique
+  name         String    // Display name, editable by user
   passwordHash String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -26,6 +27,8 @@ model User {
   votes        CommentVote[]
   role         Role      @default(USER)
   gameVotes    GameVote[]
+  profileImage String?   // URL to profile image, nullable
+  about        String?   // User bio/about section, nullable
 }
 
 model GameCache {

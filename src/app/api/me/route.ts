@@ -25,9 +25,12 @@ export async function GET() {
         id: true,
         email: true,
         username: true,
+        name: true,
+        about: true,
         role: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        profileImage: true
       }
     });
 

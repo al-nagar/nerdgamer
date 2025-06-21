@@ -35,6 +35,7 @@ export async function POST(request: Request) {
       data: {
         email,
         username,
+        name: username, // Set display name to username by default
         passwordHash,
       },
     });

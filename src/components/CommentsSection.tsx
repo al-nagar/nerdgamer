@@ -2,13 +2,14 @@
 
 import { useState, FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
 
 interface Comment {
   id: string;
   content: string;
   createdAt: string;
   updatedAt?: string;
-  author: { id: string; email: string; username?: string };
+  author: { id: string; email: string; username?: string; name?: string; profileImage?: string | null };
   upvotes?: number;
   downvotes?: number;
   parentId?: string | null;
@@ -25,6 +26,49 @@ function hasVisibleReplies(comment: Comment): boolean {
     }
   }
   return false;
+}
+
+// Add avatar logic for comment authors
+function stringToColor(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return `hsl(${hash % 360}, 60%, 60%)`;
+}
+
+function UserAvatar({ name, profileImage, size = 28 }: { name: string; profileImage?: string | null; size?: number }) {
+  if (profileImage) {
+    return (
+      <img
+        src={profileImage}
+        alt={name}
+        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", border: "2px solid #fff" }}
+      />
+    );
+  }
+  const initials = name
+    ? name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase()
+    : "U";
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: stringToColor(name || "user"),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontSize: size / 2,
+        fontWeight: "bold",
+        border: "2px solid #fff"
+      }}
+    >
+      {initials}
+    </div>
+  );
 }
 
 function CommentItem({ comment, user, onReply, onEdit, onDelete, onVote, replyingTo, editingId, setReplyingTo, setEditingId }: {
@@ -53,7 +97,24 @@ function CommentItem({ comment, user, onReply, onEdit, onDelete, onVote, replyin
   return (
     <div className="border-b border-gray-700 py-4 pl-2">
       <div className="flex items-center gap-2 mb-1">
-        <span className={`font-semibold ${isDeleted ? 'text-gray-400 italic' : 'text-blue-300'}`}>{isDeleted ? 'Unknown user' : (comment.author.username || comment.author.email)}</span>
+        {/* Avatar and display name */}
+        {!isDeleted ? (
+          <>
+            {(() => {
+              const displayName = comment.author.name && comment.author.name.trim() !== "" ? comment.author.name : comment.author.username;
+              return (
+                <>
+                  <Link href={`/profile/${comment.author.username || comment.author.id}`} className="flex items-center gap-2 group">
+                    <UserAvatar name={displayName} profileImage={comment.author.profileImage} size={28} />
+                    <span className="font-semibold text-blue-300 group-hover:underline">{displayName}</span>
+                  </Link>
+                </>
+              );
+            })()}
+          </>
+        ) : (
+          <span className="font-semibold text-gray-400 italic">Unknown user</span>
+        )}
         <span className="text-xs text-gray-400">{new Date(comment.createdAt).toLocaleString()}</span>
       </div>
       {isDeleted ? (

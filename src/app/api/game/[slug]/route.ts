@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 const prisma = new PrismaClient();
 
 export async function GET(request, { params }) {
-  const { slug } = await params;
+  const { slug } = params;
   try {
     const data = await getUnifiedGameData(slug);
     if (!data) {
@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
 }
 
 export async function POST(request, { params }) {
-  const { slug } = await params;
+  const { slug } = params;
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
   if (!token) {

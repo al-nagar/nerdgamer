@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import debounce from 'lodash/debounce';
@@ -41,35 +41,89 @@ const categories = [
 function PopularGamesSection() {
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetch('/api/games/popular')
       .then(res => res.json())
       .then(setGames)
       .finally(() => setLoading(false));
   }, []);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
   if (loading) return <div className="text-center text-gray-400 mb-8">Loading popular games...</div>;
   if (!games.length) return <div className="text-center text-gray-400 mb-8">No popular games yet.</div>;
+  
   return (
-    <section className="mb-12 animate-fade-in">
+    <section className="mb-12 animate-fade-in relative">
       <h2 className="text-2xl font-bold text-white mb-4">Most Searched Games</h2>
-      <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
-        {games.map(game => (
-          <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
-            <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
-              {game.background_image ? (
-                <Image src={game.background_image} alt={game.name} fill className="object-cover" /> 
-              ) : (
-                <div className="w-full h-full bg-gray-600 flex items-center justify-center">
-                  <span className="text-gray-400 text-xs">No Image</span>
-                </div>
-              )}
+      <div className="group relative flex items-center">
+        {/* Left Arrow */}
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 -translate-x-1/2"
+          aria-label="Scroll left"
+          style={{ top: '50%', transform: 'translateY(-50%) translateX(-50%)' }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {/* Scrollable Cards */}
+        <div ref={scrollContainerRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-2 scroll-smooth px-8 w-full">
+          {games.map(game => (
+            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
+              <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
+                {game.background_image ? (
+                  <Image src={game.background_image} alt={game.name} fill className="object-cover" /> 
+                ) : (
+                  <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="font-semibold text-white text-base mb-1 line-clamp-2">{game.name}</h3>
+                <div className="text-xs text-gray-400">{game.views} views</div>
+              </div>
+            </Link>
+          ))}
+          {/* See All Card */}
+          <Link href="/popular" className="min-w-[200px] bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex-shrink-0 flex flex-col justify-center items-center">
+            <div className="h-32 w-full rounded-t-lg flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-2">🎮</div>
+                <div className="text-white font-semibold text-lg">See All</div>
+              </div>
             </div>
-            <div className="p-3">
-              <h3 className="font-semibold text-white text-base mb-1 line-clamp-2">{game.name}</h3>
-              <div className="text-xs text-gray-400">{game.views} views</div>
+            <div className="p-3 text-center">
+              <h3 className="font-semibold text-white text-base mb-1">Popular Games</h3>
+              <div className="text-xs text-blue-200">View all trending games</div>
             </div>
           </Link>
-        ))}
+        </div>
+        {/* Right Arrow */}
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-1/2"
+          aria-label="Scroll right"
+          style={{ top: '50%', transform: 'translateY(-50%) translateX(50%)' }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </section>
   );
@@ -78,35 +132,76 @@ function PopularGamesSection() {
 function LastAddedGamesSection() {
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetch('/api/games/recent')
       .then(res => res.json())
       .then(setGames)
       .finally(() => setLoading(false));
   }, []);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
   if (loading) return <div className="text-center text-gray-400 mb-8">Loading recent games...</div>;
   if (!games.length) return <div className="text-center text-gray-400 mb-8">No recent games found.</div>;
+  
   return (
-    <section className="mb-12 animate-fade-in">
+    <section className="mb-12 animate-fade-in relative">
       <h2 className="text-2xl font-bold text-white mb-4">Last Added Games</h2>
-      <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
-        {games.map(game => (
-          <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
-            <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
-              {game.background_image ? (
-                <Image src={game.background_image} alt={game.name} fill className="object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gray-600 flex items-center justify-center">
-                  <span className="text-gray-400 text-xs">No Image</span>
-                </div>
-              )}
-            </div>
-            <div className="p-3">
-              <h3 className="font-semibold text-white text-base mb-1 line-clamp-2">{game.name}</h3>
-              <div className="text-xs text-gray-400">Added: {new Date(game.createdAt).toLocaleDateString()}</div>
-            </div>
-          </Link>
-        ))}
+      <div className="group relative flex items-center">
+        {/* Left Arrow */}
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 -translate-x-1/2"
+          aria-label="Scroll left"
+          style={{ top: '50%', transform: 'translateY(-50%) translateX(-50%)' }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {/* Scrollable Cards */}
+        <div ref={scrollContainerRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-2 scroll-smooth px-8 w-full">
+          {games.map(game => (
+            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
+              <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
+                {game.background_image ? (
+                  <Image src={game.background_image} alt={game.name} fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="font-semibold text-white text-base mb-1 line-clamp-2">{game.name}</h3>
+                <div className="text-xs text-gray-400">Added: {new Date(game.createdAt).toLocaleDateString()}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+        {/* Right Arrow */}
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-1/2"
+          aria-label="Scroll right"
+          style={{ top: '50%', transform: 'translateY(-50%) translateX(50%)' }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </section>
   );
@@ -120,9 +215,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 animate-gradient-move overflow-x-hidden">
-      {/* Animated Gradient Background */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900 opacity-70 animate-gradient-move" />
+    <div className="relative min-h-screen flex flex-col justify-center items-center py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 overflow-x-hidden">
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
         {/* Hero Section */}
         <header className="mb-12 text-center animate-fade-in-up">
@@ -132,20 +225,7 @@ export default function HomePage() {
           <PopularGamesSection />
           <LastAddedGamesSection />
         </header>
-        {/* Quick Links */}
-        <section className="mb-12 animate-fade-in">
-          <div className="flex flex-wrap gap-6 justify-center">
-            <a href="/faq" className="bg-gray-700 hover:bg-gray-600 rounded-lg px-6 py-4 text-white font-semibold shadow transition flex items-center gap-2">
-              <span role="img" aria-label="FAQ">❓</span> FAQ
-            </a>
-            <a href="/donate" className="bg-gray-700 hover:bg-gray-600 rounded-lg px-6 py-4 text-white font-semibold shadow transition flex items-center gap-2">
-              <span role="img" aria-label="Donate">💖</span> Donate
-            </a>
-            <a href="/contact" className="bg-gray-700 hover:bg-gray-600 rounded-lg px-6 py-4 text-white font-semibold shadow transition flex items-center gap-2">
-              <span role="img" aria-label="Contact">📬</span> Contact
-            </a>
-          </div>
-        </section>
+        {/* Quick Links removed */}
       </div>
     </div>
   );

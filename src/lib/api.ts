@@ -490,7 +490,7 @@ export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData 
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
-          select: { id: true, email: true }
+          select: { id: true, email: true, username: true, name: true, profileImage: true }
         }
       }
     });
@@ -505,7 +505,7 @@ export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData 
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
-          select: { id: true, email: true }
+          select: { id: true, email: true, username: true, name: true, profileImage: true }
         }
       }
     });
@@ -541,7 +541,7 @@ export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData 
     orderBy: { createdAt: 'desc' },
     include: {
       author: {
-        select: { id: true, email: true }
+        select: { id: true, email: true, username: true, name: true, profileImage: true }
       }
     }
   });

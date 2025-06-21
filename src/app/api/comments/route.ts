@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     where: { gameSlug },
     orderBy: { createdAt: 'asc' },
     include: {
-      author: { select: { id: true, email: true, username: true } },
+      author: { select: { id: true, email: true, username: true, name: true, profileImage: true } },
     },
   });
   return NextResponse.json(comments);
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       },
       include: {
         author: {
-          select: { id: true, email: true, username: true },
+          select: { id: true, email: true, username: true, name: true, profileImage: true },
         },
       },
     });
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     // Return the comment with upvotes
     const commentWithVotes = await prisma.comment.findUnique({
       where: { id: newComment.id },
-      include: { author: { select: { id: true, email: true, username: true } } },
+      include: { author: { select: { id: true, email: true, username: true, name: true, profileImage: true } } },
     });
 
     return NextResponse.json({

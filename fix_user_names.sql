@@ -1,0 +1,1 @@
+UPDATE "User" SET "name" = "username" WHERE "name" IS NULL OR TRIM("name") = ''; 

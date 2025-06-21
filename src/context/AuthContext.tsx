@@ -7,7 +7,10 @@ export type User = {
   id: string; 
   email: string; 
   username: string;
+  name: string; // Display name
+  about?: string | null; // User bio/about section
   role: 'USER' | 'ADMIN';
+  profileImage?: string | null; // Add this line
 };
 
 // Define the context type

@@ -3,12 +3,13 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -119,15 +120,22 @@ export default function RegisterPage() {
                 </span>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
                   disabled={isLoading}
-                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-600 placeholder-gray-400 text-white bg-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none border border-gray-600 placeholder-gray-400 text-white bg-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Password (min 8 chars, strong)"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="inline-flex items-center px-3 rounded-r-md bg-gray-700 text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
               <p className="text-xs text-gray-400 mt-1 ml-1">Min 8 chars, uppercase, lowercase, number, special character.</p>
             </div>
