@@ -57,7 +57,7 @@ function PopularGamesSection() {
           <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
             <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
               {game.background_image ? (
-                <Image src={game.background_image} alt={game.name} fill className="object-cover" />
+                <Image src={game.background_image} alt={game.name} fill className="object-cover" /> 
               ) : (
                 <div className="w-full h-full bg-gray-600 flex items-center justify-center">
                   <span className="text-gray-400 text-xs">No Image</span>
