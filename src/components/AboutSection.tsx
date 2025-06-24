@@ -13,8 +13,8 @@ export default function AboutSection({ description }: AboutSectionProps) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4">About</h2>
+    <div className="bg-gray-800 rounded-lg p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">About</h2>
       <div className="prose prose-invert max-w-none">
         <div 
           dangerouslySetInnerHTML={{ __html: description }} 

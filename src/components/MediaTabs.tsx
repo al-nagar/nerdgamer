@@ -42,7 +42,7 @@ export default function MediaTabs({ screenshots, videos }: MediaTabsProps) {
   const videosCount = videos?.source === 'igdb' ? videos.videos.length : (videos ? 1 : 0);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
+    <div className="bg-gray-800 rounded-lg p-4 md:p-6">
       <div className="flex border-b border-gray-600">
         <button
           onClick={() => setActiveTab('screenshots')}

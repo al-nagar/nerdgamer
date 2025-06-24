@@ -83,7 +83,7 @@ function PopularGamesSection() {
         {/* Scrollable Cards */}
         <div ref={scrollContainerRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-2 scroll-smooth px-8 w-full">
           {games.map(game => (
-            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
+            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[150px] sm:min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
               <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
                 {game.background_image ? (
                   <Image src={game.background_image} alt={game.name} fill className="object-cover" /> 
@@ -100,7 +100,7 @@ function PopularGamesSection() {
             </Link>
           ))}
           {/* See All Card */}
-          <Link href="/popular" className="min-w-[200px] bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex-shrink-0 flex flex-col justify-center items-center">
+          <Link href="/popular" className="min-w-[150px] sm:min-w-[200px] bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex-shrink-0 flex flex-col justify-center items-center">
             <div className="h-32 w-full rounded-t-lg flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl mb-2">🎮</div>
@@ -174,7 +174,7 @@ function LastAddedGamesSection() {
         {/* Scrollable Cards */}
         <div ref={scrollContainerRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-2 scroll-smooth px-8 w-full">
           {games.map(game => (
-            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
+            <Link key={game.slug} href={`/game/${game.slug}`} className="min-w-[150px] sm:min-w-[200px] bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors flex-shrink-0">
               <div className="relative h-32 w-full rounded-t-lg overflow-hidden">
                 {game.background_image ? (
                   <Image src={game.background_image} alt={game.name} fill className="object-cover" />
@@ -215,12 +215,12 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 overflow-x-hidden">
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
+    <div className="relative min-h-screen flex flex-col justify-center items-center py-10 md:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 overflow-x-hidden">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-2 sm:px-4">
         {/* Hero Section */}
-        <header className="mb-12 text-center animate-fade-in-up">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-gradient-text drop-shadow-lg">NerdGamer</h1>
-          <p className="text-2xl text-gray-200 mb-8 animate-fade-in">Your one-stop, ad-free resource for everything gaming.</p>
+        <header className="mb-6 md:mb-12 text-center animate-fade-in-up">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-2 md:mb-4 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-gradient-text drop-shadow-lg">NerdGamer</h1>
+          <p className="text-lg sm:text-2xl text-gray-200 mb-4 md:mb-8 animate-fade-in">Your one-stop, ad-free resource for everything gaming.</p>
           <SearchInput />
           <PopularGamesSection />
           <LastAddedGamesSection />

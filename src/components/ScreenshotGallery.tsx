@@ -43,7 +43,7 @@ export default function ScreenshotGallery({ screenshots }: { screenshots: Screen
 
   return (
     <div className="mt-10">
-      <h2 className="mb-5 text-2xl font-bold text-white">Screenshots</h2>
+      <h2 className="mb-3 md:mb-5 text-xl md:text-2xl font-bold text-white">Screenshots</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {screenshots.map((ss, idx) => (
           <div key={ss.id}>
@@ -68,9 +68,9 @@ export default function ScreenshotGallery({ screenshots }: { screenshots: Screen
           onClick={closeModal}
         >
           {/* Top bar with close button */}
-          <div className="w-full flex justify-end items-center px-8 pt-8">
+          <div className="w-full flex justify-end items-center px-4 md:px-8 pt-4 md:pt-8">
             <button
-              className="text-3xl font-bold bg-white text-black border-2 border-black rounded-full p-3 shadow-lg focus:outline-none transition-all duration-200"
+              className="text-2xl md:text-3xl font-bold bg-white text-black border-2 border-black rounded-full p-2 md:p-3 shadow-lg focus:outline-none transition-all duration-200"
               onClick={closeModal}
               aria-label="Close"
               style={{ zIndex: 10 }}
@@ -82,7 +82,7 @@ export default function ScreenshotGallery({ screenshots }: { screenshots: Screen
             <div className="flex items-center justify-center w-full">
               {/* Left arrow */}
               <button
-                className="absolute left-8 top-1/2 -translate-y-1/2 text-4xl font-bold bg-white text-black border-2 border-black rounded-full p-4 shadow-lg focus:outline-none transition-all duration-200"
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-2xl md:text-4xl font-bold bg-white text-black border-2 border-black rounded-full p-2 md:p-4 shadow-lg focus:outline-none transition-all duration-200"
                 onClick={e => { e.stopPropagation(); prev(); }}
                 aria-label="Previous"
                 style={{ zIndex: 10 }}
@@ -95,16 +95,16 @@ export default function ScreenshotGallery({ screenshots }: { screenshots: Screen
                 alt="Game screenshot large"
                 className="rounded-lg shadow-2xl"
                 style={{
-                  maxHeight: '80vh',
-                  maxWidth: '80vw',
+                  maxHeight: '60vh',
+                  maxWidth: '90vw',
                   objectFit: 'contain',
-                  margin: '0 64px',
+                  margin: '0 16px',
                   background: '#111',
                 }}
               />
               {/* Right arrow */}
               <button
-                className="absolute right-8 top-1/2 -translate-y-1/2 text-4xl font-bold bg-white text-black border-2 border-black rounded-full p-4 shadow-lg focus:outline-none transition-all duration-200"
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-2xl md:text-4xl font-bold bg-white text-black border-2 border-black rounded-full p-2 md:p-4 shadow-lg focus:outline-none transition-all duration-200"
                 onClick={e => { e.stopPropagation(); next(); }}
                 aria-label="Next"
                 style={{ zIndex: 10 }}
@@ -113,7 +113,7 @@ export default function ScreenshotGallery({ screenshots }: { screenshots: Screen
               </button>
             </div>
             {/* Number below image in format 2/18 */}
-            <div className="mt-4 mb-8 text-white text-2xl font-extrabold select-none drop-shadow-lg text-center" style={{textShadow: '0 2px 8px #000'}}>
+            <div className="mt-2 md:mt-4 mb-4 md:mb-8 text-white text-lg md:text-2xl font-extrabold select-none drop-shadow-lg text-center" style={{textShadow: '0 2px 8px #000'}}>
               {currentIndex + 1}/{screenshots.length}
             </div>
           </div>

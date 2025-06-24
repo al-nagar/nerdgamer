@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
   }
 
   // Check if RAWG API key is available
-  const rawgApiKey = process.env.RAWG_API_KEY;
+  const rawgApiKey = process.env.NEXT_PUBLIC_RAWG_API_KEY;
   
   if (!rawgApiKey) {
-    console.warn('RAWG_API_KEY not found in environment variables');
+    console.warn('NEXT_PUBLIC_RAWG_API_KEY not found in environment variables');
     return NextResponse.json({ 
       error: 'Search functionality temporarily unavailable',
       results: [],

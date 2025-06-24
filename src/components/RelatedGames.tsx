@@ -74,23 +74,23 @@ export default function RelatedGames({ additions, gameSeries, parentGames }: Rel
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Related Games</h2>
+    <div className="bg-gray-800 rounded-lg p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Related Games</h2>
       {additions && additions.length > 0 && (
         <>
-          <h3 className="text-lg font-semibold text-gray-200 mb-2">DLCs & Editions</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-200 mb-1 md:mb-2">DLCs & Editions</h3>
           <GameGrid games={additions} />
         </>
       )}
       {gameSeries && gameSeries.length > 0 && (
         <>
-          <h3 className="text-lg font-semibold text-gray-200 mb-2">Game Series</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-200 mb-1 md:mb-2">Game Series</h3>
           <GameGrid games={gameSeries} />
         </>
       )}
       {parentGames && parentGames.length > 0 && (
         <>
-          <h3 className="text-lg font-semibold text-gray-200 mb-2">Parent Games</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-200 mb-1 md:mb-2">Parent Games</h3>
           <GameGrid games={parentGames} />
         </>
       )}

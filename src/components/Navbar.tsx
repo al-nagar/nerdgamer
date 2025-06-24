@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaSpinner } from 'react-icons/fa';
+import { FaSearch, FaSpinner, FaBars, FaTimes } from 'react-icons/fa';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchGames } from '../lib/api';
 
@@ -87,6 +87,7 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(searchQuery, 300);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if we're on the home page
   const isHomePage = pathname === '/';
@@ -187,9 +188,18 @@ export default function Navbar() {
             <span className="text-xl font-bold text-white">NerdGamer</span>
           </Link>
 
-          {/* Search Bar - Hidden on home page */}
+          {/* Hamburger for mobile */}
+          <button
+            className="md:hidden ml-2 text-gray-300 hover:text-white focus:outline-none"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+
+          {/* Search Bar - Hidden on home page, hidden on mobile */}
           {!isHomePage && (
-            <div className="flex-1 max-w-md mx-8 relative" ref={searchRef}>
+            <div className="hidden md:flex flex-1 max-w-md mx-8 relative" ref={searchRef}>
               <form onSubmit={handleSearch} className="relative">
                 <div className="relative">
                   <input
@@ -262,8 +272,8 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-4">
+          {/* Navigation Links - Desktop */}
+          <div className="hidden md:flex items-center space-x-4">
             <Link
               href="/popular"
               className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -330,6 +340,123 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-gray-800 border-t border-gray-700 px-4 pb-4 z-50">
+          {/* Search Bar for mobile */}
+          {!isHomePage && (
+            <div className="flex flex-col mt-4 mb-2" ref={searchRef}>
+              <form onSubmit={handleSearch} className="relative">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
+                    placeholder="Search games..."
+                    className="w-full px-4 py-2 pl-10 pr-4 text-sm bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </form>
+              
+              {/* Live Search Results Dropdown */}
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+                  {isSearchLoading ? (
+                    <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center">
+                      <FaSpinner className="animate-spin mr-2" />
+                      Searching...
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div>
+                      {searchResults.map((game) => (
+                        <div
+                          key={game.id}
+                          onClick={() => handleGameSelect(game)}
+                          className="flex items-center p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-b-0"
+                        >
+                          {game.background_image && (
+                            <img 
+                              src={game.background_image} 
+                              alt={game.name} 
+                              className="w-12 h-12 object-cover rounded mr-3"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white text-sm font-medium truncate">
+                              {game.name}
+                            </div>
+                            {game.released && (
+                              <div className="text-gray-400 text-xs">
+                                {new Date(game.released).getFullYear()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {searchQuery.trim() && (
+                        <div 
+                          onClick={() => {
+                            router.push(`/search/${encodeURIComponent(searchQuery.trim())}`);
+                            setSearchQuery('');
+                            setShowSearchResults(false);
+                          }}
+                          className="p-3 text-blue-400 hover:bg-gray-600 cursor-pointer text-sm font-medium border-t border-gray-600"
+                        >
+                          View all results for "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
+                  ) : searchQuery.length >= 2 ? (
+                    <div className="p-4 text-center text-gray-400 text-sm">No games found</div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex flex-col space-y-2 mt-2">
+            <Link href="/popular" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              Popular
+            </Link>
+            <Link href="/faq" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              FAQ
+            </Link>
+            <Link href="/contact" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              Contact
+            </Link>
+            <Link href="/donate" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              Donate
+            </Link>
+            {user && user.role === 'ADMIN' && !isLoading && (
+              <Link href="/admin" className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-4 py-2 rounded-md text-base font-bold transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Admin
+              </Link>
+            )}
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="text-gray-400 text-base">Loading...</div>
+              </div>
+            ) : user ? (
+              <Link href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700 transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <UserAvatar username={user.username} profileImage={user.profileImage} size={32} />
+                <span className="text-white font-medium">Profile</span>
+              </Link>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                <Link href="/login" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  Login
+                </Link>
+                <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 } 

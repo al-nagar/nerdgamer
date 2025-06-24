@@ -44,19 +44,19 @@ export default function GameHeader({
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-8">
-        <h1 className="text-5xl font-bold mb-4">{name}</h1>
+      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+        <h1 className="text-3xl sm:text-5xl font-bold mb-2 md:mb-4">{name}</h1>
         {website && (
           <a
             href={website}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mb-4 text-blue-400 hover:underline text-lg font-semibold"
+            className="inline-block mb-2 md:mb-4 text-blue-400 hover:underline text-base md:text-lg font-semibold"
           >
             Official Website
           </a>
         )}
-        <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm">
           {released && (
             <span className="bg-gray-800/80 backdrop-blur-sm px-3 py-1 rounded-full">
               Released: {new Date(released).toLocaleDateString()}
