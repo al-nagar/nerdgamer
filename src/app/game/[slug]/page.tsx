@@ -201,26 +201,40 @@ export default function GamePage() {
   const pcPlatform = game.platforms?.find((p: any) => p.platform.slug === 'pc');
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white">
-      {/* Hero Section: Most important info */}
-      <GameHeader 
-        name={game.name}
-        backgroundImage={game.background_image}
-        gameModes={game.game_modes}
-        website={game.website}
-        released={game.released}
-        rating={game.rating}
-        ratingsCount={game.ratings_count}
-        metacritic={game.metacritic}
-        playerPerspectives={game.player_perspectives}
-        ratingTop={game.rating_top}
-      />
-
-      <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8 flex flex-col lg:flex-row gap-8">
-        {/* Main Content */}
-        <div className="flex-1 space-y-8">
-          {/* Played / Want to Play Buttons */}
-          <div className="flex gap-4 mb-4">
+    <main className="relative min-h-screen text-white">
+      {/* Full-page background image */}
+      {game.background_image && (
+        <div
+          className="fixed inset-0 z-0 w-full h-full"
+          style={{
+            backgroundImage: `url(${game.background_image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+      )}
+      {/* Hero + Played/Want to Play Buttons (locked at top) */}
+      <div className="relative z-10 flex flex-col items-start justify-end min-h-[80vh] pb-8 pl-4">
+        <div className="w-full max-w-5xl">
+          <GameHeader 
+            name={game.name}
+            backgroundImage={game.background_image}
+            gameModes={game.game_modes}
+            website={game.website}
+            released={game.released}
+            rating={game.rating}
+            ratingsCount={game.ratings_count}
+            metacritic={game.metacritic}
+            playerPerspectives={game.player_perspectives}
+            ratingTop={game.rating_top}
+            platforms={game.platforms}
+          />
+        </div>
+        <div className="w-full flex justify-center mt-4">
+          <div className="flex gap-4">
             {(['played', 'want_to_play'] as const).map(type => (
               <button
                 key={type}
@@ -236,36 +250,43 @@ export default function GamePage() {
               </button>
             ))}
           </div>
-
-          {/* About Section */}
-          <AboutSection description={game.description} />
-
-          {/* Media Tabs */}
-          <MediaTabs screenshots={game.screenshots} videos={game.video_data} />
-
-          {/* System Requirements */}
-          {pcPlatform?.requirements && (
-            <SystemRequirements
-              minimum={pcPlatform.requirements.minimum}
-              recommended={pcPlatform.requirements.recommended}
-            />
-          )}
-
-          {/* Related Games */}
-          <RelatedGames 
-            additions={game.additions}
-            gameSeries={game.game_series}
-            parentGames={game.parent_games}
-          />
-
-          {/* Comments Section */}
-          <CommentsSection gameSlug={game.slug} initialComments={game.comments} />
         </div>
+      </div>
+      {/* Scroll-to-reveal content */}
+      <div className="relative z-10">
+        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8 flex flex-col lg:flex-row gap-8">
+          {/* Main Content */}
+          <div className="flex-1 space-y-8">
+            {/* About Section */}
+            <AboutSection description={game.description} />
 
-        {/* Sidebar: Key Details at the top, less important below */}
-        <aside className="w-full lg:w-[350px] flex-shrink-0">
-          <GameDetailsSidebar game={game} />
-        </aside>
+            {/* Media Tabs */}
+            <MediaTabs screenshots={game.screenshots} videos={game.video_data} />
+
+            {/* System Requirements */}
+            {pcPlatform?.requirements && (
+              <SystemRequirements
+                minimum={pcPlatform.requirements.minimum}
+                recommended={pcPlatform.requirements.recommended}
+              />
+            )}
+
+            {/* Related Games */}
+            <RelatedGames 
+              additions={game.additions}
+              gameSeries={game.game_series}
+              parentGames={game.parent_games}
+            />
+
+            {/* Comments Section */}
+            <CommentsSection gameSlug={game.slug} initialComments={game.comments} />
+          </div>
+
+          {/* Sidebar: Key Details at the top, less important below */}
+          <aside className="w-full lg:w-[350px] flex-shrink-0">
+            <GameDetailsSidebar game={game} />
+          </aside>
+        </div>
       </div>
     </main>
   );
