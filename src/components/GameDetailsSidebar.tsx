@@ -237,16 +237,29 @@ function GameVoteButtons({ slug, initialUpvotes, initialDownvotes }: { slug: str
   );
 }
 
+function CollapsibleSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="mb-4">
+      <button
+        className="w-full flex justify-between items-center text-left text-gray-300 font-semibold py-2 px-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span>{title}</span>
+        <span>{open ? '−' : '+'}</span>
+      </button>
+      {open && <div className="mt-2 px-2">{children}</div>}
+    </div>
+  );
+}
+
 export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
   return (
     <div className="space-y-6">
-      {/* Voting UI */}
-      {typeof game.upvotes === 'number' && typeof game.downvotes === 'number' && game.slug && (
-        <GameVoteButtons slug={game.slug} initialUpvotes={game.upvotes} initialDownvotes={game.downvotes} />
-      )}
-      {/* Basic Details */}
+      {/* Key Details */}
       <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Details</h3>
+        <h3 className="text-xl font-bold mb-4">Key Details</h3>
         <div className="space-y-0">
           {game.platforms && game.platforms.length > 0 && (
             <DetailItem label="Platforms">
@@ -268,110 +281,88 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
               {game.genres.map(g => g.name).join(', ')}
             </DetailItem>
           )}
+          {game.rating && (
+            <DetailItem label="User Rating">
+              <div className="flex items-center gap-1">
+                <span className="text-yellow-400">★</span>
+                <span>{game.rating.toFixed(1)}</span>
+                {game.rating_top && <span className="text-gray-400">/5</span>}
+                {game.ratings_count && (
+                  <span className="ml-2 text-gray-400">({game.ratings_count.toLocaleString()} ratings)</span>
+                )}
+              </div>
+            </DetailItem>
+          )}
+          {game.metacritic && (
+            <DetailItem label="Metacritic">
+              <span className="text-green-400">{game.metacritic}</span>
+            </DetailItem>
+          )}
         </div>
       </div>
 
-      {/* Game Categories */}
-      {(game.themes || game.game_modes || game.player_perspectives || game.game_engines || game.franchises) && (
+      {/* Store Links, Playtime, Age Rating, Language Support */}
+      {(game.stores || game.playtime || game.age_ratings || game.supported_languages) && (
         <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-bold mb-4">Categories</h3>
-          <div className="space-y-4">
-            {game.themes && game.themes.length > 0 && (
-              <div>
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Themes</h4>
-                {renderPills(game.themes)}
-              </div>
-            )}
-            {game.game_modes && game.game_modes.length > 0 && (
-              <div>
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Game Modes</h4>
-                {renderPills(game.game_modes)}
-              </div>
-            )}
-            {game.player_perspectives && game.player_perspectives.length > 0 && (
-              <div>
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Player Perspectives</h4>
-                {renderPills(game.player_perspectives)}
-              </div>
-            )}
-            {game.game_engines && game.game_engines.length > 0 && (
-              <div>
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Game Engines</h4>
-                {renderPills(game.game_engines)}
-              </div>
-            )}
-            {game.franchises && game.franchises.length > 0 && (
-              <div>
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Franchises</h4>
-                {renderPills(game.franchises)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Community Stats */}
-      {(game.rating || game.metacritic || game.playtime) && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-bold mb-4">Community</h3>
+          <h3 className="text-xl font-bold mb-4">More Info</h3>
           <div className="space-y-0">
-            {game.rating && (
-              <DetailItem label="Rating">
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">★</span>
-                  <span>{game.rating.toFixed(1)}</span>
-                  {game.rating_top && <span className="text-gray-400">/5</span>}
-                  {game.ratings_count && (
-                    <span className="ml-2 text-gray-400">({game.ratings_count.toLocaleString()} ratings)</span>
-                  )}
-                </div>
-              </DetailItem>
-            )}
-            {game.metacritic && (
-              <DetailItem label="Metacritic">
-                <span className="text-green-400">{game.metacritic}</span>
-              </DetailItem>
+            {game.stores && game.stores.length > 0 && (
+              <StoreLinks stores={game.stores} />
             )}
             {game.playtime && (
-              <DetailItem label="Average Playtime">
-                {game.playtime}h
-              </DetailItem>
+              <DetailItem label="Average Playtime">{game.playtime}h</DetailItem>
             )}
-            {/* Simple Age Rating */}
             {getSimpleAgeRating(game.age_ratings) && (
-              <DetailItem label="Age Rating">
-                {getSimpleAgeRating(game.age_ratings)}
-              </DetailItem>
+              <DetailItem label="Age Rating">{getSimpleAgeRating(game.age_ratings)}</DetailItem>
+            )}
+            {game.supported_languages && Object.keys(game.supported_languages).length > 0 && (
+              <LanguageSupportTable data={game.supported_languages} />
             )}
           </div>
         </div>
       )}
 
-      {/* Store Links */}
-      {game.stores && game.stores.length > 0 && (
-        <StoreLinks stores={game.stores} />
-      )}
-
-      {/* Age Ratings */}
-      {game.age_ratings && game.age_ratings.length > 0 && (
-        <AgeRatingDisplay ratings={game.age_ratings} />
-      )}
-
-      {/* Language Support */}
-      {game.supported_languages && Object.keys(game.supported_languages).length > 0 && (
-        <LanguageSupportTable data={game.supported_languages} />
-      )}
-
-      {/* Alternative Names */}
-      {game.alternative_names && game.alternative_names.length > 0 && (
-        <AlternativeNamesList names={game.alternative_names} />
-      )}
-
-      {/* Completion Times */}
-      {game.completion_times && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-bold mb-4">How Long to Beat</h3>
-          <div className="space-y-0">
+      {/* Collapsible: Less Important Details */}
+      <CollapsibleSection title="Additional Details">
+        {game.themes && game.themes.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Themes</h4>
+            {renderPills(game.themes)}
+          </div>
+        )}
+        {game.game_modes && game.game_modes.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Game Modes</h4>
+            {renderPills(game.game_modes)}
+          </div>
+        )}
+        {game.player_perspectives && game.player_perspectives.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Player Perspectives</h4>
+            {renderPills(game.player_perspectives)}
+          </div>
+        )}
+        {game.game_engines && game.game_engines.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Game Engines</h4>
+            {renderPills(game.game_engines)}
+          </div>
+        )}
+        {game.franchises && game.franchises.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Franchises</h4>
+            {renderPills(game.franchises)}
+          </div>
+        )}
+        {game.alternative_names && game.alternative_names.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Alternative Names</h4>
+            <AlternativeNamesList names={game.alternative_names} />
+          </div>
+        )}
+        {game.completion_times && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">How Long to Beat</h4>
             {game.completion_times.hastily && (
               <DetailItem label="Main Story">
                 {game.completion_times.hastily.value} {game.completion_times.hastily.unit === 'h' ? 'hours' : game.completion_times.hastily.unit}
@@ -388,27 +379,31 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
               </DetailItem>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Tags Section */}
-      {game.tags && game.tags.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-bold mb-4">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {game.tags.map((tag, idx) => (
-              <span
-                key={tag.id + '-' + tag.source}
-                className="bg-gray-700 px-2 py-1 rounded text-xs text-white border border-gray-600 flex items-center gap-1"
-                title={tag.source === 'rawg' ? 'From RAWG' : 'From IGDB'}
-              >
-                {tag.name}
-                <span className="text-[10px] text-gray-400">({tag.source})</span>
-              </span>
-            ))}
+        )}
+        {game.tags && game.tags.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-gray-400 text-sm font-medium mb-1">Tags</h4>
+            <div className="flex flex-wrap gap-2">
+              {game.tags.map((tag, idx) => (
+                <span
+                  key={tag.id + '-' + tag.source}
+                  className="bg-gray-700 px-2 py-1 rounded text-xs text-white border border-gray-600 flex items-center gap-1"
+                  title={tag.source === 'rawg' ? 'From RAWG' : 'From IGDB'}
+                >
+                  {tag.name}
+                  <span className="text-[10px] text-gray-400">({tag.source})</span>
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        {/* Voting UI */}
+        {typeof game.upvotes === 'number' && typeof game.downvotes === 'number' && game.slug && (
+          <div className="mt-4">
+            <GameVoteButtons slug={game.slug} initialUpvotes={game.upvotes} initialDownvotes={game.downvotes} />
+          </div>
+        )}
+      </CollapsibleSection>
     </div>
   );
 } 

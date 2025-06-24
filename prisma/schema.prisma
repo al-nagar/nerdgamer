@@ -29,6 +29,8 @@ model User {
   gameVotes    GameVote[]
   profileImage String?   // URL to profile image, nullable
   about        String?   // User bio/about section, nullable
+
+  gameLists    UserGameList[] // Relation to UserGameList
 }
 
 model GameCache {
@@ -43,6 +45,8 @@ model GameCache {
   downvotes   Int       @default(0)
   votes       GameVote[]
   views       Int       @default(0)
+
+  userGameLists UserGameList[] // Relation to UserGameList
 }
 
 model Comment {
@@ -91,4 +95,18 @@ model GameVote {
   game      GameCache @relation(fields: [gameSlug], references: [slug])
 
   @@unique([userId, gameSlug])
+}
+
+model UserGameList {
+  id        String   @id @default(cuid())
+  userId    String
+  gameSlug  String
+  status    String   // 'played' or 'want_to_play'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+  game      GameCache @relation(fields: [gameSlug], references: [slug])
+
+  @@unique([userId, gameSlug, status])
 } 

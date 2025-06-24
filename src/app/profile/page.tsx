@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaTimes, FaTrash, FaExchangeAlt } from "react-icons/fa";
 
 function stringToColor(str: string) {
   let hash = 0;
@@ -87,13 +87,40 @@ export default function ProfilePage() {
   const [viewAvatar, setViewAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [gameList, setGameList] = useState<any[]>([]);
+  const [gameListLoading, setGameListLoading] = useState(true);
+  const [gameListError, setGameListError] = useState<string | null>(null);
+  const [gameListFilter, setGameListFilter] = useState<'played' | 'want_to_play'>('played');
 
   useEffect(() => {
     setName(user?.name || "");
     setAbout(user?.about || "");
     setNewAvatar(null);
     setAvatarPreview(null);
-  }, [user]);
+    if (!user?.id) {
+      setGameList([]);
+      setGameListLoading(false);
+      setGameListError('User not found.');
+      return;
+    }
+    setGameListLoading(true);
+    fetch(`/api/profile/${user.id}/game-list`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => {
+        setGameList(data);
+        setGameListError(null);
+        console.log('Fetched game list:', data);
+      })
+      .catch((err) => {
+        setGameListError('Failed to load game list.');
+        setGameList([]);
+        console.error('Game list fetch error:', err);
+      })
+      .finally(() => setGameListLoading(false));
+  }, [user?.id]);
 
   const validatePassword = (password: string) => {
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(password);
@@ -282,6 +309,31 @@ export default function ProfilePage() {
     }
   };
 
+  const handleRemoveGame = async (slug: string) => {
+    setGameListLoading(true);
+    const game = gameList.find(g => g.slug === slug);
+    if (!game) return;
+    await fetch(`/api/game/${slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: game.status }),
+    });
+    setGameList(gl => gl.filter(g => g.slug !== slug));
+    setGameListLoading(false);
+  };
+
+  const handleToggleStatus = async (slug: string, currentStatus: 'played' | 'want_to_play') => {
+    const newStatus = currentStatus === 'played' ? 'want_to_play' : 'played';
+    setGameListLoading(true);
+    await fetch(`/api/game/${slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: newStatus }),
+    });
+    setGameList(gl => gl.map(g => g.slug === slug ? { ...g, status: newStatus } : g));
+    setGameListLoading(false);
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 flex flex-col items-center justify-start">
       <div className="bg-gray-900 w-full min-h-screen flex flex-col items-center">
@@ -434,6 +486,86 @@ export default function ProfilePage() {
               {isLoggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
+          <section className="bg-gray-800 p-6 w-full flex flex-col items-center mt-4 rounded-xl">
+            <h2 className="text-xl font-bold text-white mb-4">My Game List</h2>
+            <div className="flex gap-4 mb-4">
+              <button
+                className={`px-4 py-2 rounded font-semibold border transition-colors focus:outline-none ${
+                  gameListFilter === 'played'
+                    ? 'bg-blue-600 border-blue-700 text-white shadow'
+                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                }`}
+                onClick={() => setGameListFilter('played')}
+              >
+                Played
+              </button>
+              <button
+                className={`px-4 py-2 rounded font-semibold border transition-colors focus:outline-none ${
+                  gameListFilter === 'want_to_play'
+                    ? 'bg-blue-600 border-blue-700 text-white shadow'
+                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                }`}
+                onClick={() => setGameListFilter('want_to_play')}
+              >
+                Want to Play
+              </button>
+            </div>
+            {gameListLoading ? (
+              <div className="text-gray-400 italic">Loading...</div>
+            ) : gameListError ? (
+              <div className="text-red-400 italic">{gameListError}</div>
+            ) : gameList.filter(g => g.status === gameListFilter).length === 0 ? (
+              <div className="text-gray-400 italic">No games in this list.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                {gameList.filter(game => game.status === gameListFilter).map(game => (
+                  <div key={game.slug + game.status} className="flex items-center gap-3 bg-gray-900 rounded-lg p-3 shadow relative">
+                    {game.background_image ? (
+                      <img src={game.background_image} alt={game.name} className="w-14 h-14 object-cover rounded-md" />
+                    ) : (
+                      <div className="w-14 h-14 bg-gray-700 rounded-md flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                    )}
+                    <div className="flex-1">
+                      <div className="font-semibold text-white text-base line-clamp-1">{game.name}</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${game.status === 'played' ? 'bg-green-700 text-green-200' : 'bg-blue-700 text-blue-200'}`}>
+                          {game.status === 'played' ? 'Played' : 'Want to Play'}
+                        </span>
+                        {gameListFilter === 'want_to_play' && (
+                          <button
+                            className="ml-2 text-green-400 hover:text-green-600 transition-colors"
+                            title="Mark as Played"
+                            onClick={() => handleToggleStatus(game.slug, 'want_to_play')}
+                            disabled={gameListLoading}
+                          >
+                            Done
+                          </button>
+                        )}
+                        {gameListFilter === 'played' && (
+                          <button
+                            className="ml-2 text-blue-400 hover:text-blue-600 transition-colors"
+                            title="Move to Want to Play"
+                            onClick={() => handleToggleStatus(game.slug, 'played')}
+                            disabled={gameListLoading}
+                          >
+                            Want to Play
+                          </button>
+                        )}
+                        <button
+                          className="ml-2 text-gray-400 hover:text-red-400 transition-colors"
+                          title="Remove from list"
+                          onClick={() => handleRemoveGame(game.slug)}
+                          disabled={gameListLoading}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
       <Modal open={avatarModalOpen} onClose={() => { setAvatarModalOpen(false); setNewAvatar(null); setAvatarPreview(null); setViewAvatar(false); }}>

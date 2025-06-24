@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchGames } from '../lib/api';
@@ -103,19 +103,30 @@ export default function SearchInput({ onSelect }: { onSelect?: (game: Game) => v
   const [isLoading, setIsLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 300); // 300ms delay
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input on '/' key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
-    if (debouncedQuery) {
+    if (debouncedQuery.length >= 2) {
       setIsLoading(true);
       searchGames(debouncedQuery).then((data) => {
-        // --- NEW SORTING LOGIC ---
         const sortedGames = data.results.sort((a: Game, b: Game) => {
           const scoreA = calculateRelevanceScore(a, debouncedQuery);
           const scoreB = calculateRelevanceScore(b, debouncedQuery);
-          return scoreB - scoreA; // Sort descending (highest score first)
+          return scoreB - scoreA;
         });
-        // -------------------------
-        setResults(sortedGames.slice(0, 7)); // Show top 7 sorted results
+        setResults(sortedGames.slice(0, 7));
         setIsLoading(false);
       });
     } else {
@@ -126,6 +137,7 @@ export default function SearchInput({ onSelect }: { onSelect?: (game: Game) => v
   return (
     <div style={{ width: '100%' }}>
       <input
+        ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -146,7 +158,7 @@ export default function SearchInput({ onSelect }: { onSelect?: (game: Game) => v
         }}
       />
       {isLoading && <div style={{ padding: '10px' }}>Searching...</div>}
-      {!isLoading && debouncedQuery && results.length > 0 && (
+      {!isLoading && debouncedQuery.length >= 2 && results.length > 0 && (
         <div style={{
           marginTop: '20px',
           backgroundColor: 'transparent',
