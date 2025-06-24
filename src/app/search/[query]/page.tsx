@@ -88,7 +88,8 @@ const calculateRelevanceScore = (game: SearchResult, searchQuery: string): numbe
 };
 
 export default function SearchResultsPage({ params }: PageProps) {
-  const decodedQuery = decodeURIComponent(params.query || '');
+  const { query } = use(params);
+  const decodedQuery = decodeURIComponent(query || '');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);

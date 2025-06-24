@@ -10,6 +10,7 @@ interface GameHeaderProps {
   ratingsCount?: number;
   metacritic?: number | null;
   playerPerspectives?: Array<{ name: string }>;
+  ratingTop?: number;
 }
 
 function yearsSinceRelease(released: string): string | null {
@@ -28,7 +29,8 @@ export default function GameHeader({
   rating, 
   ratingsCount, 
   metacritic, 
-  playerPerspectives 
+  playerPerspectives,
+  ratingTop
 }: GameHeaderProps) {
   const modeNames = gameModes?.map(m => m.name).join(', ') || '';
 
@@ -68,7 +70,7 @@ export default function GameHeader({
           {rating && (
             <span className="bg-gray-800/80 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1">
               <span className="text-yellow-400">★</span>
-              {rating.toFixed(1)}/5
+              {rating.toFixed(1)}{ratingTop ? `/` + ratingTop : ''}
               {ratingsCount && (
                 <span className="text-gray-400">({ratingsCount.toLocaleString()})</span>
               )}

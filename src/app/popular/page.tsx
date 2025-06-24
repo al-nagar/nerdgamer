@@ -16,7 +16,11 @@ export default function AllPopularGamesPage() {
     setLoading(true);
     const res = await fetch(`/api/games/all-popular?skip=${page * PAGE_SIZE}&take=${PAGE_SIZE}`);
     const data = await res.json();
-    setGames((prev) => [...prev, ...data.games]);
+    setGames((prev) => {
+      const allGames = [...prev, ...data.games];
+      const uniqueGames = Array.from(new Map(allGames.map(g => [g.slug, g])).values());
+      return uniqueGames;
+    });
     setHasMore(data.hasMore);
     setLoading(false);
   }, [page]);

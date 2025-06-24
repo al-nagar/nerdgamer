@@ -187,6 +187,7 @@ export default function GamePage() {
         ratingsCount={game.ratings_count}
         metacritic={game.metacritic}
         playerPerspectives={game.player_perspectives}
+        ratingTop={game.rating_top}
       />
 
       {/* Main Content */}

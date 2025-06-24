@@ -40,6 +40,7 @@ interface RawgGame {
     title?: string;
     description?: string;
   }>;
+  tags?: { id: number; name: string }[];
 }
 
 interface IgdbCandidate {
@@ -74,6 +75,7 @@ interface IgdbGame {
     name: string;
     comment: string;
   }>;
+  keywords?: { id: number; name: string }[];
 }
 
 interface IgdbCompletionTimeField {
@@ -122,13 +124,6 @@ export interface UnifiedGameData extends Omit<RawgGame, 'website'> {
     rating?: number;
     metacritic?: number | null;
   }>;
-  development_team?: Array<{
-    id: number;
-    name: string;
-    slug: string;
-    image?: string;
-    games_count?: number;
-  }>;
   game_series?: Array<{
     id: number;
     name: string;
@@ -147,8 +142,11 @@ export interface UnifiedGameData extends Omit<RawgGame, 'website'> {
     rating?: number;
     metacritic?: number | null;
   }>;
+  tags?: Array<{ id: number; name: string; source: string }>;
 }
 
+// Remove from UnifiedGameData type
+type CleanedUnifiedGameData = Omit<UnifiedGameData, 'added' | 'suggestions_count' | 'reviews_count' | 'achievements_count'>;
 
 // --- API HELPER FUNCTIONS ---
 // Each function has one specific job.
@@ -472,7 +470,9 @@ async function fetchParentGames(gameId: string, page: number = 1) {
 
 // --- THE MASTER ORCHESTRATOR FUNCTION ---
 
-export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData & { comments: any[] }> {
+export type GameApiResponse = UnifiedGameData & { comments: any[]; upvotes: number; downvotes: number; slug: string; views: number };
+
+export async function getUnifiedGameData(slug: string): Promise<GameApiResponse> {
   // --- STEP 1: DEFINE CACHE DURATION AND CHECK THE DATABASE ---
   const CACHE_DURATION_IN_DAYS = 7;
   const cacheCutoffDate = new Date();
@@ -494,7 +494,12 @@ export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData 
         }
       }
     });
-    return { ...(cachedGame.gameData as unknown as UnifiedGameData), comments, upvotes: cachedGame.upvotes, downvotes: cachedGame.downvotes, slug: cachedGame.slug, views: cachedGame.views };
+    // Fix tags type if needed
+    let gameData = cachedGame.gameData as any;
+    if (Array.isArray(gameData.tags) && gameData.tags.length > 0 && typeof gameData.tags[0].source === 'undefined') {
+      gameData.tags = gameData.tags.map((tag: any) => ({ ...tag, source: 'rawg' }));
+    }
+    return { ...gameData, comments, upvotes: cachedGame.upvotes, downvotes: cachedGame.downvotes, slug: cachedGame.slug, views: cachedGame.views };
   }
 
   // If we reach this point, it's either a cache miss or the data is stale.
@@ -509,7 +514,12 @@ export async function getUnifiedGameData(slug: string): Promise<UnifiedGameData 
         }
       }
     });
-    return { ...(cachedGame.gameData as unknown as UnifiedGameData), comments, upvotes: cachedGame.upvotes, downvotes: cachedGame.downvotes, slug: cachedGame.slug, views: cachedGame.views };
+    // Fix tags type if needed
+    let gameData = cachedGame.gameData as any;
+    if (Array.isArray(gameData.tags) && gameData.tags.length > 0 && typeof gameData.tags[0].source === 'undefined') {
+      gameData.tags = gameData.tags.map((tag: any) => ({ ...tag, source: 'rawg' }));
+    }
+    return { ...gameData, comments, upvotes: cachedGame.upvotes, downvotes: cachedGame.downvotes, slug: cachedGame.slug, views: cachedGame.views };
   }
   
   // --- STEP 3: FETCH FRESH DATA FROM APIS ---
@@ -584,12 +594,14 @@ async function fetchAndProcessGameDataFromAPIs(slug: string): Promise<UnifiedGam
     const rawgPublishers: Array<{ name: string }> = [];
 
     // Create the unified data object with RAWG data
+    const { tags, ...rawgGameRest } = rawgGame;
     const unifiedData: UnifiedGameData = {
-      ...rawgGame,
+      ...rawgGameRest,
       screenshots: rawgScreenshots,
       website: rawgGame.website || null,
       developers: rawgDevelopers,
       publishers: rawgPublishers,
+      // tags will be assigned later with the correct structure
     };
 
     // Get IGDB data
@@ -838,6 +850,60 @@ async function fetchAndProcessGameDataFromAPIs(slug: string): Promise<UnifiedGam
         }
         unifiedData.supported_languages = supportedLanguagesData;
         // --- END IGDB Language Support ---
+
+        // --- TAGS & KEYWORDS MERGE (RAWG + IGDB) ---
+        let rawgTags: { id: number; name: string; source: string }[] = [];
+        if (rawgGame.tags && Array.isArray(rawgGame.tags)) {
+          rawgTags = rawgGame.tags.map((tag: any) => ({
+            id: tag.id,
+            name: tag.name,
+            source: 'rawg',
+          }));
+        }
+
+        let igdbTags: { id: number; name: string; source: string }[] = [];
+        if (igdbId) {
+          // Fetch IGDB keywords if available
+          const fullIgdbData = await fetchFullIgdbData(igdbId);
+          if (fullIgdbData && fullIgdbData.keywords && Array.isArray(fullIgdbData.keywords) && fullIgdbData.keywords.length > 0) {
+            try {
+              const igdbHeaders = {
+                'Client-ID': process.env.IGDB_CLIENT_ID!,
+                'Authorization': `Bearer ${await getIgdbToken()}`,
+                'Content-Type': 'text/plain',
+              };
+              const keywordRes = await fetch('https://api.igdb.com/v4/keywords', {
+                method: 'POST',
+                headers: igdbHeaders,
+                body: `fields id, name; where id = (${fullIgdbData.keywords.join(',')}); limit 100;`,
+              });
+              if (keywordRes.ok) {
+                const igdbKeywords = await keywordRes.json();
+                igdbTags = igdbKeywords.map((kw: any) => ({
+                  id: kw.id,
+                  name: kw.name,
+                  source: 'igdb',
+                }));
+              }
+            } catch (err) {
+              console.warn('Failed to fetch IGDB keywords:', err);
+            }
+          }
+        }
+        // Merge and dedupe tags (prefer RAWG)
+        const seenTagNames = new Set<string>();
+        const mergedTags: { id: number; name: string; source: string }[] = [
+          ...rawgTags,
+          ...igdbTags.filter(tag => {
+            const key = tag.name.toLowerCase();
+            if (seenTagNames.has(key)) return false;
+            seenTagNames.add(key);
+            return true;
+          })
+        ];
+        if (mergedTags.length > 0) {
+          (unifiedData as any).tags = mergedTags;
+        }
       }
     }
 

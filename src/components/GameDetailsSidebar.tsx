@@ -72,6 +72,7 @@ interface GameDetailsSidebarProps {
     upvotes?: number;
     downvotes?: number;
     slug?: string;
+    tags?: Array<{ id: number; name: string; source: string }>;
   };
 }
 
@@ -310,7 +311,7 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
       )}
 
       {/* Community Stats */}
-      {(game.rating || game.metacritic || game.ratings_count || game.added || game.playtime || game.suggestions_count || game.achievements_count || game.reviews_count) && (
+      {(game.rating || game.metacritic || game.playtime) && (
         <div className="bg-gray-800 rounded-lg p-6">
           <h3 className="text-xl font-bold mb-4">Community</h3>
           <div className="space-y-0">
@@ -320,12 +321,10 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
                   <span className="text-yellow-400">★</span>
                   <span>{game.rating.toFixed(1)}</span>
                   {game.rating_top && <span className="text-gray-400">/5</span>}
+                  {game.ratings_count && (
+                    <span className="ml-2 text-gray-400">({game.ratings_count.toLocaleString()} ratings)</span>
+                  )}
                 </div>
-              </DetailItem>
-            )}
-            {game.ratings_count && (
-              <DetailItem label="Ratings Count">
-                {game.ratings_count.toLocaleString()}
               </DetailItem>
             )}
             {game.metacritic && (
@@ -333,29 +332,9 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
                 <span className="text-green-400">{game.metacritic}</span>
               </DetailItem>
             )}
-            {game.added && (
-              <DetailItem label="Added to Lists">
-                {game.added.toLocaleString()}
-              </DetailItem>
-            )}
             {game.playtime && (
               <DetailItem label="Average Playtime">
                 {game.playtime}h
-              </DetailItem>
-            )}
-            {game.suggestions_count && (
-              <DetailItem label="Suggestions">
-                {game.suggestions_count.toLocaleString()}
-              </DetailItem>
-            )}
-            {game.achievements_count && (
-              <DetailItem label="Achievements">
-                {game.achievements_count.toLocaleString()}
-              </DetailItem>
-            )}
-            {game.reviews_count && (
-              <DetailItem label="Reviews">
-                {game.reviews_count.toLocaleString()}
               </DetailItem>
             )}
             {/* Simple Age Rating */}
@@ -408,6 +387,25 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
                 {game.completion_times.completely.value} {game.completion_times.completely.unit === 'h' ? 'hours' : game.completion_times.completely.unit}
               </DetailItem>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Tags Section */}
+      {game.tags && game.tags.length > 0 && (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold mb-4">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {game.tags.map((tag, idx) => (
+              <span
+                key={tag.id + '-' + tag.source}
+                className="bg-gray-700 px-2 py-1 rounded text-xs text-white border border-gray-600 flex items-center gap-1"
+                title={tag.source === 'rawg' ? 'From RAWG' : 'From IGDB'}
+              >
+                {tag.name}
+                <span className="text-[10px] text-gray-400">({tag.source})</span>
+              </span>
+            ))}
           </div>
         </div>
       )}
