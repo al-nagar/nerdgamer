@@ -2,7 +2,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import GameHeader from '@/components/GameHeader';
-import AboutSection from '@/components/AboutSection';
 import MediaTabs from '@/components/MediaTabs';
 import GameDetailsSidebar from '@/components/GameDetailsSidebar';
 import SystemRequirements from '@/components/SystemRequirements';
@@ -135,6 +134,7 @@ interface UnifiedGameData {
     rating?: number;
     metacritic?: number | null;
   }>;
+  playtime?: number;
 }
 
 const statusLabels = {
@@ -150,6 +150,9 @@ export default function GamePage() {
   const [userGameStatus, setUserGameStatus] = useState<null | 'played' | 'want_to_play'>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const lastIncrementedSlug = useRef<string | null>(null);
+  const [upvotes, setUpvotes] = useState<number>(0);
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(null);
 
   useEffect(() => {
     setGame(null);
@@ -158,11 +161,18 @@ export default function GamePage() {
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
         setGame(data);
+        setUpvotes(data.upvotes || 0);
+        setDownvotes(data.downvotes || 0);
         setError(null);
       })
       .catch(() => setError('Game not found'))
       .finally(() => setLoading(false));
     lastIncrementedSlug.current = null;
+    // Fetch user vote
+    fetch(`/api/game/${slug}?userVote=1`).then(res => res.json()).then(data => {
+      if (data.vote === 'upvote' || data.vote === 'downvote') setUserVote(data.vote);
+      else setUserVote(null);
+    });
   }, [slug]);
 
   useEffect(() => {
@@ -193,6 +203,36 @@ export default function GamePage() {
       body: JSON.stringify({ type }),
     });
     setStatusLoading(false);
+  };
+
+  const handleUpvote = async () => {
+    if (!game?.slug) return;
+    const res = await fetch(`/api/game/${game.slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'upvote' }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUpvotes(data.upvotes);
+      setDownvotes(data.downvotes);
+      setUserVote(data.userVote || 'upvote');
+    }
+  };
+
+  const handleDownvote = async () => {
+    if (!game?.slug) return;
+    const res = await fetch(`/api/game/${game.slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'downvote' }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUpvotes(data.upvotes);
+      setDownvotes(data.downvotes);
+      setUserVote(data.userVote || 'downvote');
+    }
   };
 
   if (loading) return <div className="text-center text-gray-400 mt-12">Loading game...</div>;
@@ -231,34 +271,26 @@ export default function GamePage() {
             playerPerspectives={game.player_perspectives}
             ratingTop={game.rating_top}
             platforms={game.platforms}
+            description={game.description}
+            onPlayedClick={() => handleStatusClick('played')}
+            onWantToPlayClick={() => handleStatusClick('want_to_play')}
+            userGameStatus={userGameStatus}
+            statusLoading={statusLoading}
+            upvotes={upvotes}
+            downvotes={downvotes}
+            onUpvote={handleUpvote}
+            onDownvote={handleDownvote}
+            playtime={game.playtime}
+            userVote={userVote}
           />
-        </div>
-        <div className="w-full flex justify-center mt-4">
-          <div className="flex gap-4">
-            {(['played', 'want_to_play'] as const).map(type => (
-              <button
-                key={type}
-                className={`px-6 py-2 rounded font-semibold border transition-colors focus:outline-none ${
-                  userGameStatus === type
-                    ? 'bg-blue-600 border-blue-700 text-white shadow'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
-                } ${statusLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
-                onClick={() => handleStatusClick(type)}
-                disabled={statusLoading}
-              >
-                {statusLabels[type]}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       {/* Scroll-to-reveal content */}
       <div className="relative z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8 flex flex-col lg:flex-row gap-8">
+        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8 flex flex-col gap-8">
           {/* Main Content */}
-          <div className="flex-1 space-y-8">
-            {/* About Section */}
-            <AboutSection description={game.description} />
+          <div className="w-full space-y-8">
+            
 
             {/* Media Tabs */}
             <MediaTabs screenshots={game.screenshots} videos={game.video_data} />
@@ -282,8 +314,8 @@ export default function GamePage() {
             <CommentsSection gameSlug={game.slug} initialComments={game.comments} />
           </div>
 
-          {/* Sidebar: Key Details at the top, less important below */}
-          <aside className="w-full lg:w-[350px] flex-shrink-0">
+          {/* Sidebar: now below main content */}
+          <aside className="w-full max-w-2xl mx-auto mt-8">
             <GameDetailsSidebar game={game} />
           </aside>
         </div>

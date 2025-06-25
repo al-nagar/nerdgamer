@@ -257,12 +257,6 @@ function CollapsibleSection({ title, children, defaultOpen = false }: { title: s
 export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
   return (
     <div className="space-y-6">
-      {/* Voting UI - always visible at the top */}
-      {typeof game.upvotes === 'number' && typeof game.downvotes === 'number' && game.slug && (
-        <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center">
-          <GameVoteButtons slug={game.slug} initialUpvotes={game.upvotes} initialDownvotes={game.downvotes} />
-        </div>
-      )}
       {/* Key Details */}
       <div className="bg-gray-800 rounded-lg p-6">
         <h3 className="text-xl font-bold mb-4">Key Details</h3>
@@ -287,22 +281,10 @@ export default function GameDetailsSidebar({ game }: GameDetailsSidebarProps) {
               {game.genres.map(g => g.name).join(', ')}
             </DetailItem>
           )}
-            {game.rating && (
-            <DetailItem label="User Rating">
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">★</span>
-                  <span>{game.rating.toFixed(1)}</span>
-                  {game.rating_top && <span className="text-gray-400">/5</span>}
-                  {game.ratings_count && (
-                    <span className="ml-2 text-gray-400">({game.ratings_count.toLocaleString()} ratings)</span>
-                  )}
-                </div>
-              </DetailItem>
-            )}
-            {game.metacritic && (
-              <DetailItem label="Metacritic">
-                <span className="text-green-400">{game.metacritic}</span>
-              </DetailItem>
+          {game.metacritic && (
+            <DetailItem label="Metacritic">
+              <span className="text-green-400">{game.metacritic}</span>
+            </DetailItem>
           )}
         </div>
       </div>

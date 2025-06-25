@@ -88,6 +88,8 @@ export default function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(searchQuery, 300);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   // Check if we're on the home page
   const isHomePage = pathname === '/';
@@ -179,10 +181,53 @@ export default function Navbar() {
     };
   }, [dropdownOpen]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Gradually increase opacity from 0 (at top) to 0.4 (at 100px or more)
+  const maxOpacity = 0.4;
+  const maxScroll = 100;
+  const opacity = Math.min(scrollY / maxScroll, 1) * maxOpacity;
+
+  const baseStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    zIndex: 1000,
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 1.5rem',
+    transition: 'background-color 0.3s, backdrop-filter 0.3s, border-bottom 0.3s',
+  };
+  const navStyle = {
+    ...baseStyle,
+    backgroundColor: `rgba(20, 20, 20, ${opacity})`,
+    backdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+    WebkitBackdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+    borderBottom: 'none',
+    boxShadow: 'none',
+  };
+
   return (
-    <nav className="bg-gray-800/70 backdrop-blur border-b border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav style={navStyle}>
+      <div style={{
+        maxWidth: '1280px',
+        margin: '0 auto',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '64px',
+        padding: '0 1.5rem',
+        position: 'relative',
+      }}>
+        <div className="flex items-center h-16 w-full justify-center gap-8">
           {/* Logo/Brand */}
           <Link href="/" className="flex items-center">
             <span className="text-xl font-bold text-white">NerdGamer</span>
@@ -200,7 +245,7 @@ export default function Navbar() {
           {/* Search Bar - Hidden on home page, hidden on mobile */}
           {!isHomePage && (
             <div className="hidden md:flex flex-1 max-w-md mx-8 relative" ref={searchRef}>
-              <form onSubmit={handleSearch} className="relative">
+              <form onSubmit={handleSearch} className="relative w-full">
                 <div className="relative">
                   <input
                     type="text"
@@ -208,7 +253,14 @@ export default function Navbar() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
                     placeholder="Search games..."
-                    className="w-full px-4 py-2 pl-10 pr-4 text-sm bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none rounded-lg shadow-none"
+                    style={{
+                      background: `rgba(20, 20, 20, ${opacity})`,
+                      border: opacity > 0.05 ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(76, 76, 76, 0.05)',
+                      backdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+                      WebkitBackdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+                      transition: 'background 0.3s, border 0.3s, backdrop-filter 0.3s',
+                    }}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FaSearch className="h-4 w-4 text-gray-400" />
@@ -218,7 +270,17 @@ export default function Navbar() {
               
               {/* Live Search Results Dropdown */}
               {showSearchResults && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+                <div
+                  className="absolute top-full left-0 right-0 mt-1 rounded-xl shadow-lg z-50 max-h-80 overflow-y-auto no-scrollbar"
+                  style={{
+                    background: `rgba(20, 20, 20, ${opacity})`,
+                    border: opacity > 0.05 ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: 'none',
+                    backdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+                    WebkitBackdropFilter: opacity > 0 ? 'blur(10px)' : 'none',
+                    transition: 'background 0.3s, border 0.3s, backdrop-filter 0.3s',
+                  }}
+                >
                   {isSearchLoading ? (
                     <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center">
                       <FaSpinner className="animate-spin mr-2" />
@@ -226,11 +288,19 @@ export default function Navbar() {
                     </div>
                   ) : searchResults.length > 0 ? (
                     <div>
-                      {searchResults.map((game) => (
+                      {searchResults.map((game, idx) => (
                         <div
                           key={game.id}
                           onClick={() => handleGameSelect(game)}
-                          className="flex items-center p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-b-0"
+                          className="flex items-center p-3 cursor-pointer border-b border-transparent last:border-b-0"
+                          style={{
+                            background: idx === selectedIndex ? 'rgba(0, 0, 0, 0.63)' : 'rgba(20, 20, 20, 0.35)',
+                            borderRadius: '12px',
+                            margin: '4px 8px',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          onMouseLeave={() => setSelectedIndex(-1)}
                         >
                           {game.background_image && (
                             <img 
@@ -372,11 +442,19 @@ export default function Navbar() {
                     </div>
                   ) : searchResults.length > 0 ? (
                     <div>
-                      {searchResults.map((game) => (
+                      {searchResults.map((game, idx) => (
                         <div
                           key={game.id}
                           onClick={() => handleGameSelect(game)}
-                          className="flex items-center p-3 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-b-0"
+                          className="flex items-center p-3 cursor-pointer border-b border-transparent last:border-b-0"
+                          style={{
+                            background: idx === selectedIndex ? 'rgba(20, 20, 20, 0.55)' : 'rgba(20, 20, 20, 0.35)',
+                            borderRadius: '12px',
+                            margin: '4px 8px',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          onMouseLeave={() => setSelectedIndex(-1)}
                         >
                           {game.background_image && (
                             <img 
@@ -456,6 +534,21 @@ export default function Navbar() {
             )}
           </div>
         </div>
+      )}
+      {/* Gradient border overlay when scrolled */}
+      {opacity > 0.05 && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 0,
+            width: '100%',
+            height: '1px',
+            zIndex: -1,
+            background: 'linear-gradient(to right, transparent, rgba(100,100,100,0.4), transparent)',
+            pointerEvents: 'none',
+          }}
+        />
       )}
     </nav>
   );

@@ -42,32 +42,35 @@ export default function VideoPlayer({ data }: { data?: VideoData }) {
     <div className="mt-10">
       <h2 className="mb-5 text-2xl font-bold text-white">Trailers & Videos</h2>
       {data.source === 'igdb' && data.videos.length > 0 && (
-        <div className="main-video-player">
-          <iframe
-            key={selectedVideoId || data.videos[0].video_id}
-            width="100%"
-            height="450"
-            src={`https://www.youtube.com/embed/${selectedVideoId || data.videos[0].video_id}`}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ backgroundColor: '#000', borderRadius: '8px' }}
-          ></iframe>
+        <div className="main-video-player w-full flex items-center justify-center">
+          <div className="relative w-full max-w-7xl aspect-video bg-black rounded-lg shadow-2xl overflow-hidden" style={{ aspectRatio: '16/9', background: '#111' }}>
+            <iframe
+              key={selectedVideoId || data.videos[0].video_id}
+              src={`https://www.youtube.com/embed/${selectedVideoId || data.videos[0].video_id}`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute top-0 left-0 w-full h-full"
+              style={{ borderRadius: '8px', backgroundColor: '#000' }}
+            ></iframe>
+          </div>
         </div>
       )}
       {data.source === 'rawg' && data.clip && (
-        <div className="main-video-player">
-          <video
-            key={data.clip.clip}
-            controls
-            width="100%"
-            src={data.clip.clip}
-            poster={data.clip.preview}
-            style={{ backgroundColor: '#000', borderRadius: '8px' }}
-          >
-            Your browser does not support the video tag.
-          </video>
+        <div className="main-video-player w-full flex items-center justify-center">
+          <div className="relative w-full max-w-7xl aspect-video bg-black rounded-lg shadow-2xl overflow-hidden" style={{ aspectRatio: '16/9', background: '#111' }}>
+            <video
+              key={data.clip.clip}
+              controls
+              src={data.clip.clip}
+              poster={data.clip.preview}
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              style={{ borderRadius: '8px', backgroundColor: '#000' }}
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       )}
       {/* Thumbnails for IGDB videos */}

@@ -151,10 +151,13 @@ export default function SearchInput({ onSelect }: { onSelect?: (game: Game) => v
           padding: '12px',
           fontSize: '16px',
           width: '100%',
-          border: '1px solid #555',
-          borderRadius: '6px',
-          backgroundColor: '#2a2a2a',
+          maxWidth: '340px',
+          border: '1.5px solid rgba(120,120,120,0.25)',
+          borderRadius: '8px',
+          backgroundColor: 'rgba(40, 40, 40, 0.7)',
           color: '#fff',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
         }}
       />
       {isLoading && <div style={{ padding: '10px' }}>Searching...</div>}
