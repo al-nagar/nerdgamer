@@ -285,16 +285,11 @@ export default function GamePage() {
           />
         </div>
       </div>
-      {/* Scroll-to-reveal content */}
+      {/* Media Tabs - moved directly under GameHeader */}
       <div className="relative z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8 flex flex-col gap-8">
-          {/* Main Content */}
+        <div className="container mx-auto px-2 sm:px-4 py-0 md:py-0 flex flex-col gap-8">
           <div className="w-full space-y-8">
-            
-
-            {/* Media Tabs */}
             <MediaTabs screenshots={game.screenshots} videos={game.video_data} />
-
             {/* System Requirements */}
             {pcPlatform?.requirements && (
               <SystemRequirements
@@ -302,18 +297,15 @@ export default function GamePage() {
                 recommended={pcPlatform.requirements.recommended}
               />
             )}
-
             {/* Related Games */}
             <RelatedGames 
               additions={game.additions}
               gameSeries={game.game_series}
               parentGames={game.parent_games}
             />
-
             {/* Comments Section */}
             <CommentsSection gameSlug={game.slug} initialComments={game.comments} />
           </div>
-
           {/* Sidebar: now below main content */}
           <aside className="w-full max-w-2xl mx-auto mt-8">
             <GameDetailsSidebar game={game} />
