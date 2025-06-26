@@ -604,6 +604,26 @@ async function fetchAndProcessGameDataFromAPIs(slug: string): Promise<UnifiedGam
       // tags will be assigned later with the correct structure
     };
 
+    // --- PATCH: Attach requirements to platforms if present (from RAWG) ---
+    if (Array.isArray(unifiedData.platforms)) {
+      unifiedData.platforms = unifiedData.platforms.map((plat: any) => {
+        // RAWG sometimes puts requirements in plat.requirements_en or plat.requirements_ru, but usually in plat.requirements
+        // Try all possible keys, prefer 'requirements' then 'requirements_en'
+        let req = plat.requirements || plat.requirements_en || undefined;
+        // If not present, check if the original rawgGame.platforms has it (sometimes RAWG API structure varies)
+        if (!req && rawgGame.platforms) {
+          const origPlat = rawgGame.platforms.find((p: any) => p.platform && plat.platform && p.platform.id === plat.platform.id);
+          if (origPlat && (origPlat.requirements || origPlat.requirements_en)) {
+            req = origPlat.requirements || origPlat.requirements_en;
+          }
+        }
+        if (req && (req.minimum || req.recommended)) {
+          return { ...plat, requirements: { minimum: req.minimum, recommended: req.recommended } };
+        }
+        return plat;
+      });
+    }
+
     // Get IGDB data
     let igdbId: number | null = null;
     
@@ -719,53 +739,53 @@ async function fetchAndProcessGameDataFromAPIs(slug: string): Promise<UnifiedGam
           });
         }
 
-        // Add IGDB fields
+        // --- START OF FINAL AGE RATING LOGIC ---
         let finalAgeRatings = [];
-        let ageRatingIds = fullIgdbData?.age_ratings;
-        ageRatingIds = (ageRatingIds || []).filter(id => typeof id === 'number' && id > 0);
-        if (ageRatingIds && ageRatingIds.length > 0) {
-            ageRatingIds = await getValidAgeRatingIds(ageRatingIds);
-            if (ageRatingIds.length > 0) {
-                try {
-                    // 1. Fetch age rating objects (reference fields only)
-                    const ageRatingObjects = await fetchIgdbDataByIds(
-                        'age_ratings',
-                        'organization,rating_category,rating_content_descriptions',
-                        ageRatingIds
-                    );
+        const ageRatingIds = fullIgdbData?.age_ratings;
 
-                    // 2. Collect all unique referenced IDs
-                    const orgIds = [...new Set(ageRatingObjects.map((ar: any) => ar.organization).filter(Boolean))];
-                    const categoryIds = [...new Set(ageRatingObjects.map((ar: any) => ar.rating_category).filter(Boolean))];
-                    const contentIds = [...new Set(ageRatingObjects.flatMap((ar: any) => ar.rating_content_descriptions || []).filter(Boolean))];
+        if (ageRatingIds && Array.isArray(ageRatingIds) && ageRatingIds.length > 0) {
+            try {
+                // STEP 1: Fetch the base age rating objects.
+                const ageRatingObjects = await fetchIgdbDataByIds('age_ratings', '*', ageRatingIds);
 
-                    // 3. Fetch all referenced details
+                if (ageRatingObjects.length > 0) {
+                    // STEP 2: Collect all unique *nested* IDs.
+                    const orgIds = [...new Set(ageRatingObjects.map(ar => ar.organization).filter(Boolean))];
+                    const categoryIds = [...new Set(ageRatingObjects.map(ar => ar.rating_category).filter(Boolean))];
+                    // THIS IS THE CRUCIAL PART FOR CONTENT DESCRIPTORS
+                    const contentIds = [...new Set(ageRatingObjects.flatMap(ar => ar.rating_content_descriptions_v2 || []).filter(Boolean))];
+
+                    // STEP 3: Fetch all details for these nested IDs in parallel.
                     const [orgs, categories, contents] = await Promise.all([
-                        fetchIgdbDataByIds('age_rating_organizations', 'name', orgIds as number[]),
-                        fetchIgdbDataByIds('age_rating_categories', 'rating', categoryIds as number[]),
-                        fetchIgdbDataByIds('age_rating_content_descriptions', 'description', contentIds as number[]),
+                        fetchIgdbDataByIds('age_rating_organizations', 'name', orgIds),
+                        fetchIgdbDataByIds('age_rating_categories', 'rating', categoryIds),
+                        // We now explicitly fetch the content descriptions
+                        fetchIgdbDataByIds('age_rating_content_descriptions_v2', 'description', contentIds)
                     ]);
 
-                    // 4. Build lookup maps and join
-                    const orgMap = new Map(orgs.map((o: any) => [o.id, o.name]));
-                    const categoryMap = new Map(categories.map((c: any) => [c.id, c.rating]));
-                    const contentMap = new Map(contents.map((c: any) => [c.id, c.description]));
+                    // STEP 4: Create lookup maps for all three data types.
+                    const orgMap = new Map(orgs.map(o => [o.id, o.name]));
+                    const categoryMap = new Map(categories.map(c => [c.id, c.rating]));
+                    const contentMap = new Map(contents.map(c => [c.id, c.description]));
 
-                    finalAgeRatings = ageRatingObjects.map((ar: any) => ({
+                    // STEP 5: Build the final objects by joining all the data from our maps.
+                    finalAgeRatings = ageRatingObjects.map(ar => ({
                         id: ar.id,
                         organization: { name: orgMap.get(ar.organization) || 'Unknown Org' },
                         rating_category: { rating: categoryMap.get(ar.rating_category) || 'Not Rated' },
-                        rating_content_descriptions: (ar.rating_content_descriptions || [])
-                            .map((id: any) => ({ id, description: contentMap.get(id) }))
-                            .filter((d: any) => d.description)
+                        // Now we can correctly map the IDs to their full description text
+                        rating_content_descriptions_v2: (ar.rating_content_descriptions_v2 || [])
+                            .map(id => ({ id, description: contentMap.get(id) }))
+                            .filter(d => d.description)
                     }));
-                } catch (error) {
-                    // Handle age ratings error silently
                 }
+            } catch (error) {
+                console.error('[Age Ratings] Error during final fetch:', error);
             }
         }
+        // --- END OF FINAL AGE RATING LOGIC ---
 
-        // Add IGDB fields directly to unifiedData
+        // Add IGDB fields
         Object.assign(unifiedData, {
           summary: fullIgdbData.summary,
           franchises: fullIgdbData.franchises,

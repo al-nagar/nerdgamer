@@ -14,14 +14,14 @@ async function getAdminUser() {
   return user;
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: { id: string } }) {
   const user = await getAdminUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { id } = params;
+    const { id } = context.params;
     const body = await request.json();
     const { role } = body;
 

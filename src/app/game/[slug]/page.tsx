@@ -7,6 +7,7 @@ import GameDetailsSidebar from '@/components/GameDetailsSidebar';
 import SystemRequirements from '@/components/SystemRequirements';
 import RelatedGames from '@/components/RelatedGames';
 import CommentsSection from '../../../components/CommentsSection';
+import DetailsTabs from '../../../components/DetailsTabs';
 
 interface PlatformWithRequirements {
   platform: {
@@ -269,6 +270,7 @@ export default function GamePage() {
             ratingsCount={game.ratings_count}
             metacritic={game.metacritic}
             playerPerspectives={game.player_perspectives}
+            genres={game.genres || []}
             ratingTop={game.rating_top}
             platforms={game.platforms}
             description={game.description}
@@ -282,6 +284,7 @@ export default function GamePage() {
             onDownvote={handleDownvote}
             playtime={game.playtime}
             userVote={userVote}
+            age_ratings={game.age_ratings}
           />
         </div>
       </div>
@@ -290,19 +293,8 @@ export default function GamePage() {
         <div className="container mx-auto px-2 sm:px-4 py-0 md:py-0 flex flex-col gap-8">
           <div className="w-full space-y-8">
             <MediaTabs screenshots={game.screenshots} videos={game.video_data} />
-            {/* System Requirements */}
-            {pcPlatform?.requirements && (
-              <SystemRequirements
-                minimum={pcPlatform.requirements.minimum}
-                recommended={pcPlatform.requirements.recommended}
-              />
-            )}
-            {/* Related Games */}
-            <RelatedGames 
-              additions={game.additions}
-              gameSeries={game.game_series}
-              parentGames={game.parent_games}
-            />
+            {/* DetailsTabs: new horizontal tabbed details section */}
+            <DetailsTabs game={game} />
             {/* Comments Section */}
             <CommentsSection gameSlug={game.slug} initialComments={game.comments} />
           </div>

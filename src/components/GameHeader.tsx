@@ -13,6 +13,7 @@ interface GameHeaderProps {
   ratingsCount?: number;
   metacritic?: number | null;
   playerPerspectives?: Array<{ name: string }>;
+  genres?: Array<{ name: string }>;
   ratingTop?: number;
   platforms?: Array<{ platform: { name: string, slug: string } }>;
   description?: string;
@@ -26,6 +27,7 @@ interface GameHeaderProps {
   downvotes?: number;
   playtime?: number;
   userVote?: 'upvote' | 'downvote' | null;
+  age_ratings?: any[];
 }
 
 function yearsSinceRelease(released: string): string | null {
@@ -62,6 +64,39 @@ function injectShowLessButton(html: string, buttonHtml: string): string {
   return html + buttonHtml;
 }
 
+// Helper to map age rating to a simple label (copied from GameDetailsSidebar)
+function getSimpleAgeRating(ageRatings?: any[]): string | null {
+  if (!ageRatings || ageRatings.length === 0) return null;
+  // Prefer ESRB, then PEGI, then any
+  const priorities = ['ESRB', 'PEGI', 'CERO', 'USK', 'GRAC', 'CLASSIND', 'ACB'];
+  let best: any = null;
+  for (const org of priorities) {
+    best = ageRatings.find(r => r.organization?.name?.toUpperCase().includes(org));
+    if (best) break;
+  }
+  if (!best) best = ageRatings[0];
+  const label = (best.rating_category?.rating || '').toLowerCase();
+  // Map common labels to user-friendly ones
+  if (label.includes('everyone 10')) return '+10';
+  if (label.includes('everyone')) return 'Everyone';
+  if (label.includes('teen')) return '+13';
+  if (label.includes('mature')) return '+17';
+  if (label.includes('adults only') || label.includes('adult')) return '+18';
+  if (label.includes('pegi 3')) return '+3';
+  if (label.includes('pegi 7')) return '+7';
+  if (label.includes('pegi 12')) return '+12';
+  if (label.includes('pegi 16')) return '+16';
+  if (label.includes('pegi 18')) return '+18';
+  // Handle single-letter ESRB codes
+  if (label === 'e') return 'Everyone';
+  if (label === 'e10+' || label === 'e 10+') return '+10';
+  if (label === 't') return '+13';
+  if (label === 'm') return '+17';
+  if (label === 'ao') return '+18';
+  if (label.match(/\d+/)) return `+${label.match(/\d+/)[0]}`;
+  return best.rating_category?.rating || null;
+}
+
 export default function GameHeader({
   name,
   backgroundImage,
@@ -72,6 +107,7 @@ export default function GameHeader({
   ratingsCount,
   metacritic,
   playerPerspectives,
+  genres,
   ratingTop,
   platforms,
   description,
@@ -85,9 +121,11 @@ export default function GameHeader({
   downvotes,
   playtime,
   userVote,
+  age_ratings,
 }: GameHeaderProps) {
   const modeNames = gameModes?.map(m => m.name).join(', ') || '';
   const perspectiveNames = playerPerspectives?.map(p => p.name).join(', ') || '';
+  const genreNames = genres?.map(g => g.name).join(', ') || '';
   const combinedDetails = [modeNames, perspectiveNames].filter(Boolean).join(', ');
 
   // Map platform names to icons
@@ -211,6 +249,32 @@ export default function GameHeader({
                 {perspectiveNames}
               </span>
             )}
+            {/* Simple Age Rating pill (after player perspectives, before website) */}
+            {getSimpleAgeRating(age_ratings) && (
+              <span className="bg-gray-900/60 text-white-200 px-3 py-1 rounded-full font-medium text-bas">
+                {getSimpleAgeRating(age_ratings)}
+              </span>
+            )}
+            {/* Official Website pill */}
+            {website && (
+              <a
+                href={website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-black-600/80 text-white px-3 py-1 rounded-full font-medium text-base flex items-center gap-1 hover:bg-gray-700 transition-colors"
+                style={{ textDecoration: 'none' }}
+              >
+                <span>Official Website</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="inline-block ml-1" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14m-7 7h7a2 2 0 002-2v-7" /></svg>
+              </a>
+            )}
+          </div>
+        )}
+        {/* Genres line below game modes and perspectives */}
+        {genreNames && (
+          <div className="text-base mb-3 flex flex-wrap items-center gap-2">
+            <span className="text-gray-300 font-semibold"></span>
+            <span className="bg-gray-900/60 text-white-200 px-3 py-1 rounded-full font-medium text-base">{genreNames}</span>
           </div>
         )}
         {description && (

@@ -1,40 +1,38 @@
 'use client';
 
-type AltName = {
+import React from 'react';
+
+interface AlternativeName {
   name: string;
   comment?: string;
-  id?: number;
+}
+
+interface AlternativeNamesListProps {
+  names: AlternativeName[];
+}
+
+const AlternativeNamesList: React.FC<AlternativeNamesListProps> = ({ names }) => {
+  if (!names || names.length === 0) return null;
+  return (
+    <ul className="w-full">
+      {names.map((alt, idx) => (
+        <li
+          key={alt.name + (alt.comment || '')}
+          className="flex justify-between items-center py-2 px-1"
+          style={{
+            borderBottom: idx !== names.length - 1 ? '1px solid #2a2a2a' : 'none',
+          }}
+        >
+          <span className="font-semibold text-white mr-4" style={{ wordBreak: 'break-word' }}>{alt.name}</span>
+          {alt.comment && (
+            <span className="text-sm text-gray-400 ml-4" style={{ whiteSpace: 'nowrap' }}>
+              ({alt.comment})
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 };
 
-export default function AlternativeNamesList({ names }: { names?: (string | AltName)[] }) {
-  if (!names || names.length === 0) {
-    return null;
-  }
-
-  // Normalize the names to handle both string and object formats
-  const normalizedNames = names.map((name) => {
-    if (typeof name === 'string') {
-      return { name, comment: '' };
-    }
-    return {
-      name: name.name || '',
-      comment: name.comment || ''
-    };
-  });
-
-  return (
-    <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Alternative Names</h3>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-        {normalizedNames.map((name, index) => (
-          <li key={index} style={{ marginBottom: '8px' }}>
-            <strong>{name.name}</strong>
-            {name.comment && (
-              <span style={{ color: '#aaa', marginLeft: '8px' }}>({name.comment})</span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-} 
+export default AlternativeNamesList; 
